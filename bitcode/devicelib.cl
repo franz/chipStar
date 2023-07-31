@@ -442,20 +442,21 @@ EXPORT void __chip_threadfence_system() { mem_fence(CLK_LOCAL_MEM_FENCE | CLK_GL
 
 // sets size bytes of the memory pointed to by ptr to value
 // interpret ptr as a unsigned char so that it writes as bytes
-EXPORT void* __chip_memset(DEFAULT_AS void* ptr, int value, size_t size) {
-  volatile unsigned char* temporary = ptr;
+EXPORT void *__chip_memset(DEFAULT_AS void *ptr, int value, size_t size) {
+  unsigned char *temporary = ptr;
 
-  for(int i=0;i<size;i++)
+  for (int i = 0; i < size; i++)
     temporary[i] = value;
-  
-    return ptr;
+
+  return ptr;
 }
 
-EXPORT void* __chip_memcpy(DEFAULT_AS void *dest, DEFAULT_AS const void * src, size_t n) {
-  volatile unsigned char* temporary_dest = dest;
-  volatile const unsigned char* temporary_src = src;
+EXPORT void *__chip_memcpy(DEFAULT_AS void *dest, DEFAULT_AS const void *src,
+                           size_t n) {
+  unsigned char *temporary_dest = dest;
+  const unsigned char *temporary_src = src;
 
-  for(int i=0;i<n;i++)
+  for (int i = 0; i < n; i++)
     temporary_dest[i] = temporary_src[i];
 
   return dest;
