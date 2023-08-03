@@ -128,15 +128,22 @@ std::optional<std::string> readFromFile(const fs::path Path) {
 }
 
 std::optional<fs::path> getHIPCCPath() {
-  // TODO: Probably should detect if we are using a built or an
-  //       installed CHIP library. Mixing the installed and the built
-  //       resources could lead to obscure issues.
-  for (const auto &ExeCand : {fs::path(CHIP_INSTALL_DIR) / "bin/hipcc",
-                              fs::path(CHIP_BUILD_DIR) / "bin/hipcc"})
-    if (canExecuteHipcc(ExeCand))
-      return ExeCand;
+  static std::once_flag Flag;
+  static std::optional<fs::path> HIPCCPath;
 
-  return std::nullopt;
+  std::call_once(Flag, []() {
+    // TODO: Probably should detect if we are using a built or an
+    //       installed CHIP library. Mixing the installed and the built
+    //       resources could lead to obscure issues.
+    for (const auto &ExeCand : {fs::path(CHIP_INSTALL_DIR) / "bin/hipcc",
+                                fs::path(CHIP_BUILD_DIR) / "bin/hipcc"})
+      if (canExecuteHipcc(ExeCand)) {
+        HIPCCPath = ExeCand;
+        return;
+      }
+  });
+
+  return HIPCCPath;
 }
 
 std::string_view extractSPIRVModule(const void *Bundle, std::string &ErrorMsg) {
