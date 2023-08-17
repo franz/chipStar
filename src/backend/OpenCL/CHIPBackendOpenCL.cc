@@ -503,7 +503,7 @@ void CHIPDeviceOpenCL::populateDevicePropertiesImpl() {
   // https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#atomic-functions
   if (HipDeviceProps_.major > 5 &&
       ((SVMCapabilities & CL_DEVICE_SVM_ATOMICS) == 0 ||
-       !SupportsFineGrainSVM)) {
+       (SVMCapabilities & CL_DEVICE_SVM_FINE_GRAIN_BUFFER) == 0)) {
     HipDeviceProps_.major = 5;
     HipDeviceProps_.minor = 0;
   }
