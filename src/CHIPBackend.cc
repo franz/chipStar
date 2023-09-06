@@ -1071,6 +1071,8 @@ void chipstar::Context::syncQueues(chipstar::Queue *TargetQueue) {
   // Always sycn with all blocking queues
   for (auto Queue : Dev->getQueuesNoLock()) {
     if (Queue->getQueueFlags().isBlocking())
+      logDebug("@@@@@@@ ADDING Q {} TARGET Q {}",
+               (void*)Queue, (void*)TargetQueue);
       QueuesToSyncWith.push_back(Queue);
   }
 
@@ -1084,16 +1086,23 @@ void chipstar::Context::syncQueues(chipstar::Queue *TargetQueue) {
       if (Ev)
         EventsToWaitOn.push_back(Ev);
     }
-    SyncQueuesEvent = TargetQueue->enqueueBarrierImpl(EventsToWaitOn);
-    SyncQueuesEvent->Msg = "barrierSyncQueue";
+    if (!EventsToWaitOn.empty()) {
+      logDebug("@@@@@@@ DEF Q EVENTS TO WAIT ON: {}", EventsToWaitOn.size());
+      SyncQueuesEvent = TargetQueue->enqueueBarrierImpl(EventsToWaitOn);
+      SyncQueuesEvent->Msg = "barrierSyncQueue";
+    }
   } else { // blocking stream must wait until default stream is done
     auto Ev = DefaultQueue->getLastEvent();
-    if (Ev)
+    if (Ev) {
       EventsToWaitOn.push_back(Ev);
-    SyncQueuesEvent = TargetQueue->enqueueBarrierImpl(EventsToWaitOn);
-    SyncQueuesEvent->Msg = "barrierSyncQueue";
+      logDebug("@@@@@@@ NON-DEF Q EVENTS TO WAIT ON: {}", EventsToWaitOn.size());
+      SyncQueuesEvent = TargetQueue->enqueueBarrierImpl(EventsToWaitOn);
+      SyncQueuesEvent->Msg = "barrierSyncQueue";
+    }
   }
-  ::Backend->trackEvent(SyncQueuesEvent);
+  if (SyncQueuesEvent) {
+    ::Backend->trackEvent(SyncQueuesEvent);
+  }
 }
 
 chipstar::Device *chipstar::Context::getDevice() {
