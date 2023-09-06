@@ -36,6 +36,19 @@
   ze_command_list_handle_t CommandList;                                        \
   CommandList = Queue->getCmdList();
 
+#define GET_LAST_EVENT \
+uint32_t numEvents = 0; \
+ze_event_handle_t EvHandle = nullptr; \
+{ \
+  LOCK(LastEventMtx); \
+  if (LastEvent_) { \
+    numEvents = 1; \
+    CHIPEventLevel0 *Ev = static_cast<CHIPEventLevel0*>(LastEvent_.get()); \
+    EvHandle = Ev->peek(); \
+  } \
+}
+
+
 static ze_image_type_t getImageType(unsigned HipTextureID) {
   switch (HipTextureID) {
   default:
@@ -738,6 +751,9 @@ CHIPKernelLevel0::CHIPKernelLevel0(ze_kernel_handle_t ZeKernel,
 
   PrivateSize_ = Props.privateMemSize;
   StaticLocalSize_ = Props.localMemSize;
+  logWarn("Kernel {} has PrivateMem {}, StaticLocalMem {}, SpillMem {}",
+          HostFName, Props.privateMemSize, Props.localMemSize,
+          Props.spillMemSize);
 
   // TODO there doesn't seem to exist a way to get these from L0 API
   MaxDynamicLocalSize_ =
@@ -1080,10 +1096,11 @@ CHIPQueueLevel0::launchImpl(chipstar::ExecItem *ExecItem) {
   // This function may not be called from simultaneous threads with the same
   // command list handle.
   // Done via GET_COMMAND_LIST
+  GET_LAST_EVENT;
   auto Status = zeCommandListAppendLaunchKernel(
       CommandList, KernelZe, &LaunchArgs,
-      std::static_pointer_cast<CHIPEventLevel0>(LaunchEvent)->peek(), 0,
-      nullptr);
+      std::static_pointer_cast<CHIPEventLevel0>(LaunchEvent)->peek(),
+      numEvents, numEvents ? &EvHandle : nullptr);
   CHIPERR_CHECK_LOG_AND_THROW(Status, ZE_RESULT_SUCCESS,
                               hipErrorInitializationError);
   // #ifndef NDEBUG
@@ -1132,10 +1149,11 @@ CHIPQueueLevel0::memFillAsyncImpl(void *Dst, size_t Size, const void *Pattern,
   // The application must not call this function from
   // simultaneous threads with the same command list handle.
   // Done via GET_COMMAND_LIST
+  GET_LAST_EVENT;
   ze_result_t Status = zeCommandListAppendMemoryFill(
       CommandList, Dst, Pattern, PatternSize, Size,
-      std::static_pointer_cast<CHIPEventLevel0>(MemFillEvent)->peek(), 0,
-      nullptr);
+      std::static_pointer_cast<CHIPEventLevel0>(MemFillEvent)->peek(),
+      numEvents, numEvents ? &EvHandle : nullptr);
   CHIPERR_CHECK_LOG_AND_THROW(Status, ZE_RESULT_SUCCESS, hipErrorTbd);
   executeCommandList(CommandList, MemFillEvent);
 
@@ -1174,12 +1192,13 @@ std::shared_ptr<chipstar::Event> CHIPQueueLevel0::memCopy3DAsyncImpl(
   GET_COMMAND_LIST(this);
   // The application must not call this function from
   // simultaneous threads with the same command list handle.
-  // Done via GET_COMMAND_LIST
+  // Done via
+  GET_LAST_EVENT;
   ze_result_t Status = zeCommandListAppendMemoryCopyRegion(
       CommandList, Dst, &DstRegion, Dpitch, Dspitch, Src, &SrcRegion, Spitch,
       Sspitch,
-      std::static_pointer_cast<CHIPEventLevel0>(MemCopyRegionEvent)->peek(), 0,
-      nullptr);
+      std::static_pointer_cast<CHIPEventLevel0>(MemCopyRegionEvent)->peek(),
+      numEvents, numEvents ? &EvHandle : nullptr);
   CHIPERR_CHECK_LOG_AND_THROW(Status, ZE_RESULT_SUCCESS, hipErrorTbd);
   executeCommandList(CommandList, MemCopyRegionEvent);
 
@@ -1196,6 +1215,8 @@ CHIPQueueLevel0::memCopyToImage(ze_image_handle_t Image, const void *Src,
       static_cast<CHIPBackendLevel0 *>(Backend)->createCHIPEvent(ChipCtxZe);
   ImageCopyEvent->Msg = "memCopyToImage";
 
+  GET_LAST_EVENT;
+
   if (!SrcRegion.isPitched()) {
     GET_COMMAND_LIST(this)
     // The application must not call this function from
@@ -1203,8 +1224,8 @@ CHIPQueueLevel0::memCopyToImage(ze_image_handle_t Image, const void *Src,
     // Done via GET_COMMAND_LIST
     ze_result_t Status = zeCommandListAppendImageCopyFromMemory(
         CommandList, Image, Src, 0,
-        std::static_pointer_cast<CHIPEventLevel0>(ImageCopyEvent)->peek(), 0,
-        nullptr);
+        std::static_pointer_cast<CHIPEventLevel0>(ImageCopyEvent)->peek(),
+        numEvents, numEvents ? &EvHandle : nullptr);
     CHIPERR_CHECK_LOG_AND_THROW(Status, ZE_RESULT_SUCCESS, hipErrorTbd);
     executeCommandList(CommandList, ImageCopyEvent);
 
@@ -1234,7 +1255,7 @@ CHIPQueueLevel0::memCopyToImage(ze_image_handle_t Image, const void *Src,
         LastRow
             ? std::static_pointer_cast<CHIPEventLevel0>(ImageCopyEvent)->peek()
             : nullptr,
-        0, nullptr);
+        numEvents, numEvents ? &EvHandle : nullptr);
     CHIPERR_CHECK_LOG_AND_THROW(Status, ZE_RESULT_SUCCESS, hipErrorTbd);
     executeCommandList(CommandList, ImageCopyEvent);
     SrcRow += SrcRegion.Pitch[0];
@@ -1420,10 +1441,11 @@ CHIPQueueLevel0::memCopyAsyncImpl(void *Dst, const void *Src, size_t Size) {
   // The application must not call this function from simultaneous threads with
   // the same command list handle
   // Done via GET_COMMAND_LIST
+  GET_LAST_EVENT;
   Status = zeCommandListAppendMemoryCopy(
       CommandList, Dst, Src, Size,
-      std::static_pointer_cast<CHIPEventLevel0>(MemCopyEvent)->peek(), 0,
-      nullptr);
+      std::static_pointer_cast<CHIPEventLevel0>(MemCopyEvent)->peek(),
+      numEvents, numEvents ? &EvHandle : nullptr);
   CHIPERR_CHECK_LOG_AND_THROW(Status, ZE_RESULT_SUCCESS,
                               hipErrorInitializationError);
   executeCommandList(CommandList, MemCopyEvent);
