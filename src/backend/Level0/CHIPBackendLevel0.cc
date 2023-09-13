@@ -231,7 +231,7 @@ void CHIPEventLevel0::reset() {
   auto Status = zeEventHostReset(Event_);
   CHIPERR_CHECK_LOG_AND_THROW(Status, ZE_RESULT_SUCCESS, hipErrorTbd);
   {
-    LOCK(EventMtx); // chipstar::Event::TrackCalled_
+    //LOCK(EventMtx); // chipstar::Event::TrackCalled_
     TrackCalled_ = false;
     UserEvent_ = false;
     EventStatus_ = EVENT_STATUS_INIT;
