@@ -203,12 +203,13 @@ void SPVFuncInfo::visitKernelArgs(KernelArgVisitor Visitor) const {
   visitKernelArgsImpl(std::vector<void *>(), Visitor);
 }
 
-/// Return HIP user visible kernel argument count.
-unsigned SPVFuncInfo::getNumClientArgs() const {
+void SPVFuncInfo::setNumClientArgs() {
   unsigned Count = getNumKernelArgs();
   for (const auto &ArgTI : ArgTypeInfo_) {
     auto ArgKind = ArgTI.Kind;
-    Count -= ArgKind == SPVTypeKind::Sampler || ArgTI.isWorkgroupPtr();
+    if (ArgKind == SPVTypeKind::Sampler || ArgTI.isWorkgroupPtr())
+      Count--;
   }
-  return Count;
+  NumClientArgs_ = Count;
 }
+

@@ -635,6 +635,7 @@ private:
     }
     FuncInfo.ArgTypeInfo_.emplace_back(
         SPVArgTypeInfo{TypeKind, ParamType->getSC(), ParamSize});
+    FuncInfo.setNumClientArgs();
   }
 
   bool parseInstructionStream(const InstWord *Stream, size_t NumWords) {

@@ -79,6 +79,8 @@ class SPVFuncInfo {
   /// index (key) and argument size (value).
   std::map<uint16_t, uint16_t> SpilledArgs_;
 
+  unsigned NumClientArgs_ = 0;
+
 public:
   /// A structure for argument info passed by the visitor methods.
   struct Arg : SPVArgTypeInfo {
@@ -99,8 +101,13 @@ public:
   using ClientArgVisitor = std::function<void(const ClientArg &)>;
   using KernelArgVisitor = std::function<void(const KernelArg &)>;
 
+  /// sets the visible argument count based on ArgTypeInfo
+  void setNumClientArgs();
+
   SPVFuncInfo() = default;
-  SPVFuncInfo(const std::vector<SPVArgTypeInfo> &Info) : ArgTypeInfo_(Info) {}
+  SPVFuncInfo(const std::vector<SPVArgTypeInfo> &Info) : ArgTypeInfo_(Info) {
+    setNumClientArgs();
+  }
 
   void visitClientArgs(ClientArgVisitor Fn) const;
   void visitClientArgs(const std::vector<void *> &ArgList,
@@ -112,7 +119,7 @@ public:
   /// Return visible kernel argument count.
   ///
   /// The count only accounts arguments defined in the HIP source code.
-  unsigned getNumClientArgs() const;
+  unsigned getNumClientArgs() const { return NumClientArgs_; }
 
   /// Return actual kernel argument count (includes arguments not
   /// defined in HIP source code)
