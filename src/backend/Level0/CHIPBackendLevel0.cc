@@ -724,7 +724,7 @@ void CHIPStaleEventMonitorLevel0::monitor() {
                  "entries: {}",
                  (void *)MapEntry.first);
       }
-      //   pthread_exit(0);
+      pthread_exit(0);
     }
 
   } // endless loop

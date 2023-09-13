@@ -299,30 +299,51 @@ public:
   }
 }; // end CHIPQueueLevel0
 
+#define MAX_CACHED_EVENTS 16
 class CHIPContextLevel0 : public chipstar::Context {
   OpenCLFunctionInfoMap FuncInfos_;
   std::vector<LZEventPool *> EventPools_;
+  std::stack<std::shared_ptr<CHIPEventLevel0>> EventCache_;
 
 public:
   std::shared_ptr<CHIPEventLevel0> getEventFromPool() {
 
-    // go through all pools and try to get an allocated event
-    LOCK(ContextMtx); // Context::EventPools
-    std::shared_ptr<CHIPEventLevel0> Event;
-    for (auto EventPool : EventPools_) {
-      LOCK(EventPool->EventPoolMtx); // LZEventPool::FreeSlots_
-      if (EventPool->EventAvailable())
-        return EventPool->getEvent();
+    LOCK(ContextMtx); // Context::EventPools, EventCache
+    if (!EventCache_.empty()) {
+      std::shared_ptr<CHIPEventLevel0> RetVal = EventCache_.top();
+      EventCache_.pop();
+      return RetVal;
     }
 
-    // no events available, create new pool, get event from there and return
-    logTrace("No available events found in {} event pools. Creating a new "
-             "event pool",
-             EventPools_.size());
-    auto NewEventPool = new LZEventPool(this, EVENT_POOL_SIZE);
-    Event = NewEventPool->getEvent();
-    EventPools_.push_back(NewEventPool);
-    return Event;
+    cacheFromEventPools();
+    if (EventCache_.size() < MAX_CACHED_EVENTS) {
+      // no events available, create new pool, get event from there and return
+      logTrace("No available events found in {} event pools. Creating a new "
+               "event pool",
+               EventPools_.size());
+      auto NewEventPool = new LZEventPool(this, EVENT_POOL_SIZE);
+      EventPools_.push_back(NewEventPool);
+      cacheFromEventPools();
+    }
+
+    assert(EventCache_.empty() == false);
+    std::shared_ptr<CHIPEventLevel0> RetVal = EventCache_.top();
+    EventCache_.pop();
+    return RetVal;
+  }
+
+  void cacheFromEventPools() {
+    // go through all pools and try to get an allocated event
+    unsigned Cached = EventCache_.size();
+    for (auto EventPool : EventPools_) {
+      if (Cached >= MAX_CACHED_EVENTS)
+        break;
+      LOCK(EventPool->EventPoolMtx); // LZEventPool::FreeSlots_
+      while ((Cached < MAX_CACHED_EVENTS) && EventPool->EventAvailable()) {
+        EventCache_.emplace(EventPool->getEvent());
+        ++Cached;
+      }
+    }
   }
 
   bool ownsZeContext = true;
