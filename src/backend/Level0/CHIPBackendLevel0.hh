@@ -304,30 +304,42 @@ public:
   }
 }; // end CHIPQueueLevel0
 
+#define MAX_CACHED_EVENTS 16
 class CHIPContextLevel0 : public chipstar::Context {
   OpenCLFunctionInfoMap FuncInfos_;
   std::vector<LZEventPool *> EventPools_;
+  std::stack<std::shared_ptr<CHIPEventLevel0>> EventCache_;
+
+  void _prefetchFromEventPools(size_t EventsToCache);
+  mutable std::mutex PrefetchMtx;
+  mutable std::mutex EventCacheMtx;
 
 public:
   std::shared_ptr<CHIPEventLevel0> getEventFromPool() {
+    std::unique_lock<std::mutex> EventCacheLockGuard(EventCacheMtx); // EventCache access
 
-    // go through all pools and try to get an allocated event
-    LOCK(ContextMtx); // Context::EventPools
-    std::shared_ptr<CHIPEventLevel0> Event;
-    for (auto EventPool : EventPools_) {
-      LOCK(EventPool->EventPoolMtx); // LZEventPool::FreeSlots_
-      if (EventPool->EventAvailable())
-        return EventPool->getEvent();
+    size_t NumEvents = (MAX_CACHED_EVENTS/2);
+    if (EventCache_.empty()) {
+      EventCacheLockGuard.unlock();
+      _prefetchFromEventPools(NumEvents);
+      EventCacheLockGuard.lock();
     }
+    assert(!EventCache_.empty());
+    std::shared_ptr<CHIPEventLevel0> RetVal = EventCache_.top();
+    EventCache_.pop();
+    return RetVal;
+  }
 
-    // no events available, create new pool, get event from there and return
-    logTrace("No available events found in {} event pools. Creating a new "
-             "event pool",
-             EventPools_.size());
-    auto NewEventPool = new LZEventPool(this, EVENT_POOL_SIZE);
-    Event = NewEventPool->getEvent();
-    EventPools_.push_back(NewEventPool);
-    return Event;
+  void prefetchFromEventPools() {
+    bool NeedsPrefetch = false;
+    size_t NumEvents = 0;
+    {
+      LOCK(EventCacheMtx); // EventCache access
+      NeedsPrefetch = EventCache_.size() < (MAX_CACHED_EVENTS*2/3);
+      NumEvents = MAX_CACHED_EVENTS - EventCache_.size();
+    }
+    if (NeedsPrefetch)
+      _prefetchFromEventPools(NumEvents);
   }
 
   bool ownsZeContext = true;
