@@ -320,6 +320,32 @@ message(STATUS "chipStar will be installed to: ${CMAKE_INSTALL_PREFIX}")
 # chipStar CMAKE OPTIONS PARSING
 # =============================================================================
 
+# IPO support for runtime library
+if(POLICY CMP0069)
+  cmake_policy(SET CMP0069 NEW)
+endif()
+
+if(NOT DEFINED ENABLE_IPO)
+
+  if(uppercase_CMAKE_BUILD_TYPE STREQUAL "DEBUG")
+    set(IPO 0)
+  else()
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT IPO OUTPUT IPO_OUTPUT)
+    message(STATUS "@@@@@@@ IPO check message: ${IPO_OUTPUT}")
+  endif()
+
+  message(STATUS "Compiler supports IPO: ${ENABLE_IPO}")
+  if(IPO)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+  endif()
+
+endif()
+
+#if(ENABLE_IPO)
+#  set_property(TARGET CHIP PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+#endif()
+
 # =============================================================================
 # chipStar BINARIES & TESTS
 add_subdirectory(llvm_passes)
