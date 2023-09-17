@@ -1070,10 +1070,11 @@ void chipstar::Context::syncQueues(chipstar::Queue *TargetQueue) {
 
   // Always sycn with all blocking queues
   for (auto Queue : Dev->getQueuesNoLock()) {
-    if (Queue->getQueueFlags().isBlocking())
+    if (Queue->getQueueFlags().isBlocking()) {
       logDebug("@@@@@@@ ADDING Q {} TARGET Q {}",
                (void*)Queue, (void*)TargetQueue);
       QueuesToSyncWith.push_back(Queue);
+    }
   }
 
   // default stream waits on all blocking streams to complete
