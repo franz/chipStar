@@ -640,6 +640,7 @@ protected:
   chipstar::EventFlags Flags_;
   std::vector<std::shared_ptr<chipstar::Event>> DependsOnList;
 
+
 #ifndef NDEBUG
   // A debug flag for cathing use-after-delete.
   bool Deleted_ = false;
@@ -660,6 +661,9 @@ protected:
   virtual ~Event() { logDebug("~Event() {}", (void *)this); };
 
 public:
+  std::mutex EventMtx;
+  char padding[24];
+
   void markTracked() { TrackCalled_ = true; }
   bool isTrackCalled() { return TrackCalled_; }
   void setTrackCalled(bool Val) { TrackCalled_ = Val; }
@@ -671,7 +675,6 @@ public:
   }
   void releaseDependencies();
   chipstar::EventFlags getFlags() { return Flags_; }
-  std::mutex EventMtx;
   std::string Msg;
   // Optionally provide a field for origin of this event
   /**
@@ -1631,8 +1634,10 @@ protected:
    */
   Context();
 
+  char padding[8];
 public:
   mutable std::mutex ContextMtx;
+  char padding2[24];
 
   /**
    * @brief Destroy the Context object

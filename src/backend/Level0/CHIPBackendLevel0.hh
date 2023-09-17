@@ -90,6 +90,7 @@ private:
   uint64_t Timestamp_;
 
   std::vector<ActionFn> Actions_;
+  char padding3[16];
 
 public:
   uint32_t getValidTimestampBits();
@@ -302,12 +303,21 @@ public:
 #define MAX_CACHED_EVENTS 16
 class CHIPContextLevel0 : public chipstar::Context {
   OpenCLFunctionInfoMap FuncInfos_;
+  char padding1[16];
+
+  mutable std::mutex PrefetchMtx;
+  char padding2[24];
+
   std::vector<LZEventPool *> EventPools_;
+  char padding3[40];
+
+  mutable std::mutex EventCacheMtx;
+  char padding4[24];
+
   std::stack<std::shared_ptr<CHIPEventLevel0>> EventCache_;
+  char padding5[24];
 
   void _prefetchFromEventPools(size_t EventsToCache);
-  mutable std::mutex PrefetchMtx;
-  mutable std::mutex EventCacheMtx;
 
 public:
   std::shared_ptr<CHIPEventLevel0> getEventFromPool() {
