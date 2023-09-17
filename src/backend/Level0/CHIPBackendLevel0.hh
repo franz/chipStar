@@ -305,45 +305,36 @@ class CHIPContextLevel0 : public chipstar::Context {
   std::vector<LZEventPool *> EventPools_;
   std::stack<std::shared_ptr<CHIPEventLevel0>> EventCache_;
 
+  void _prefetchFromEventPools(size_t EventsToCache);
+  mutable std::mutex PrefetchMtx;
+  mutable std::mutex EventCacheMtx;
+
 public:
   std::shared_ptr<CHIPEventLevel0> getEventFromPool() {
+    std::unique_lock<std::mutex> EventCacheLockGuard(EventCacheMtx); // EventCache access
 
-    LOCK(ContextMtx); // Context::EventPools, EventCache
-    if (!EventCache_.empty()) {
-      std::shared_ptr<CHIPEventLevel0> RetVal = EventCache_.top();
-      EventCache_.pop();
-      return RetVal;
+    size_t NumEvents = (MAX_CACHED_EVENTS/2);
+    if (EventCache_.empty()) {
+      EventCacheLockGuard.unlock();
+      _prefetchFromEventPools(NumEvents);
+      EventCacheLockGuard.lock();
     }
-
-    cacheFromEventPools();
-    if (EventCache_.size() < MAX_CACHED_EVENTS) {
-      // no events available, create new pool, get event from there and return
-      logTrace("No available events found in {} event pools. Creating a new "
-               "event pool",
-               EventPools_.size());
-      auto NewEventPool = new LZEventPool(this, EVENT_POOL_SIZE);
-      EventPools_.push_back(NewEventPool);
-      cacheFromEventPools();
-    }
-
-    assert(EventCache_.empty() == false);
+    assert(!EventCache_.empty());
     std::shared_ptr<CHIPEventLevel0> RetVal = EventCache_.top();
     EventCache_.pop();
     return RetVal;
   }
 
-  void cacheFromEventPools() {
-    // go through all pools and try to get an allocated event
-    unsigned Cached = EventCache_.size();
-    for (auto EventPool : EventPools_) {
-      if (Cached >= MAX_CACHED_EVENTS)
-        break;
-      LOCK(EventPool->EventPoolMtx); // LZEventPool::FreeSlots_
-      while ((Cached < MAX_CACHED_EVENTS) && EventPool->EventAvailable()) {
-        EventCache_.emplace(EventPool->getEvent());
-        ++Cached;
-      }
+  void prefetchFromEventPools() {
+    bool NeedsPrefetch = false;
+    size_t NumEvents = 0;
+    {
+      LOCK(EventCacheMtx); // EventCache access
+      NeedsPrefetch = EventCache_.size() < (MAX_CACHED_EVENTS*2/3);
+      NumEvents = MAX_CACHED_EVENTS - EventCache_.size();
     }
+    if (NeedsPrefetch)
+      _prefetchFromEventPools(NumEvents);
   }
 
   bool ownsZeContext = true;

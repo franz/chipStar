@@ -224,6 +224,46 @@ createSampler(CHIPDeviceLevel0 *ChipDev, const hipResourceDesc *PResDesc,
   return Sampler;
 }
 
+void CHIPContextLevel0::_prefetchFromEventPools(size_t EventsToCache) {
+  std::stack<std::shared_ptr<CHIPEventLevel0>> TempCache;
+  LOCK(PrefetchMtx);
+  size_t Cached = 0;
+  while(TempCache.size() < EventsToCache) {
+    // go through all pools and try to get an allocated event
+    {
+      LOCK(ContextMtx);
+      for (auto EventPool : EventPools_) {
+        if (Cached >= EventsToCache)
+          break;
+        LOCK(EventPool->EventPoolMtx); // LZEventPool::FreeSlots_
+        while ((Cached < EventsToCache) && EventPool->EventAvailable()) {
+          TempCache.emplace(EventPool->getEvent());
+          ++Cached;
+        }
+      }
+    }
+    if (Cached >= EventsToCache)
+      break;
+    if (TempCache.size() < EventsToCache) {
+      LOCK(ContextMtx);
+      // no events available, create new pool, get event from there and return
+      logTrace("No available events found in {} event pools. Creating a new "
+             "event pool",  EventPools_.size());
+      auto NewEventPool = new LZEventPool(this, EVENT_POOL_SIZE);
+      EventPools_.push_back(NewEventPool);
+    }
+  }
+
+  {
+    LOCK(EventCacheMtx);
+    while (!TempCache.empty()) {
+      EventCache_.emplace(std::move(TempCache.top()));
+      TempCache.pop();
+    }
+  }
+}
+
+
 // CHIPEventLevel0
 // ***********************************************************************
 
@@ -1480,6 +1520,8 @@ void CHIPQueueLevel0::executeCommandList(
 #else
   executeCommandListReg(CommandList);
 #endif
+  CHIPContextLevel0 *ChipCtxZe = (CHIPContextLevel0 *)ChipContext_;
+  ChipCtxZe->prefetchFromEventPools();
 };
 
 void CHIPQueueLevel0::executeCommandListReg(
