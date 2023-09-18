@@ -680,6 +680,12 @@ EXPORT double __chip_atomic_add_f64(DEFAULT_AS double *address, double val) {
 float OVLD atomic_fetch_add(volatile __generic float *, float);
 double OVLD atomic_fetch_add(volatile __generic double *, double);
 
+float OVLD atomic_fetch_add_explicit(volatile __generic float*, float,
+                                     memory_order order, memory_scope scope);
+double OVLD atomic_fetch_add_explicit(volatile __generic double *, double,
+                                     memory_order order, memory_scope scope);
+
+
 static OVLD float __chip_atomic_add_f32(volatile local float *address,
                                         float val) {
   return atomic_fetch_add(address, val);
@@ -691,7 +697,7 @@ static OVLD float __chip_atomic_add_f32(volatile global float *address,
 }
 
 EXPORT float __chip_atomic_add_f32(DEFAULT_AS float *address, float val) {
-  return atomic_fetch_add(address, val);
+  return atomic_fetch_add_explicit(address, val, memory_order_relaxed, memory_scope_work_group);
 }
 
 static OVLD double __chip_atom_add_f64(volatile local double *address,
@@ -705,7 +711,7 @@ static OVLD double __chip_atom_add_f64(volatile global double *address,
 }
 
 EXPORT double __chip_atomic_add_f64(DEFAULT_AS double *address, double val) {
-  return atomic_fetch_add(address, val);
+  return atomic_fetch_add_explicit(address, val, memory_order_relaxed, memory_scope_work_group);
 }
 
 #endif
