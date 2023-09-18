@@ -35,6 +35,7 @@ While chipStar 1.0 can already be used to run various large HPC applications suc
 
   * An OpenCL 2.0 or 3.0 driver with at least the following features supported:
     * Coarse-grained buffer Shared Virtual Memory
+    * OpenCL 2.0 atomics (CL\_DEVICE\_SVM\_ATOMICS)
     * Generic address space
     * SPIR-V input
     * Program scope variables
