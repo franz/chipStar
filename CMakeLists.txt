@@ -360,6 +360,7 @@ add_subdirectory(HIPCC)
 add_dependencies(CHIP devicelib_bc LLVMHipPasses)
 add_dependencies(CHIP hipcc.bin hipconfig.bin)
 
+file(MAKE_DIRECTORY ${HIPCC_BUILD_PATH})
 file(CREATE_LINK hipcc.bin ${HIPCC_BUILD_PATH}/hipcc SYMBOLIC)
 
 add_subdirectory(bin)
