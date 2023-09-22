@@ -574,24 +574,36 @@ DEF_CHIP_ATOMIC1_ORDER_SCOPE(dec_system, fetch_sub, relaxed, all_svm_devices)
 
 DEF_CHIP_ATOMIC1_ORDER_SCOPE(dec_block, fetch_sub, relaxed, work_group)
 
-
-#define DEF_CHIP_ATOMIC3_ORDER_SCOPE(NAME, OP, ORDER, SCOPE)                                                               \
-  int OVLD atomic_##OP##_explicit(volatile __generic int *, __generic int*, int, memory_order order, memory_scope scope);                  \
-  uint OVLD atomic_##OP##_explicit(volatile __generic uint *, __generic uint*, uint, memory_order order, memory_scope scope);              \
-  ulong OVLD atomic_##OP##_explicit(volatile __generic ulong *, __generic ulong*, ulong, memory_order order, memory_scope scope);          \
-  int __chip_atomic_##NAME##_i(DEFAULT_AS int *address, int cmp, int val) {                                                       \
-    return atomic_##OP##_explicit((volatile __generic int *)address, (__generic int *)&cmp, val, memory_order_##ORDER, memory_scope_##SCOPE);                \
+#define DEF_CHIP_ATOMIC3_ORDER_SCOPE(NAME, OP, ORDER, SCOPE)                   \
+  int OVLD atomic_##OP##_explicit(volatile __generic int *, __generic int *,   \
+                                  int, memory_order order,                     \
+                                  memory_scope scope);                         \
+  uint OVLD atomic_##OP##_explicit(volatile __generic uint *,                  \
+                                   __generic uint *, uint, memory_order order, \
+                                   memory_scope scope);                        \
+  ulong OVLD atomic_##OP##_explicit(volatile __generic ulong *,                \
+                                    __generic ulong *, ulong,                  \
+                                    memory_order order, memory_scope scope);   \
+  int __chip_atomic_##NAME##_i(DEFAULT_AS int *address, int cmp, int val) {    \
+    atomic_##OP##_explicit((volatile __generic int *)address,                  \
+                           (__generic int *)&cmp, val, memory_order_##ORDER,   \
+                           memory_scope_##SCOPE);                              \
+    return cmp;                                                                \
   }                                                                            \
   uint __chip_atomic_##NAME##_u(DEFAULT_AS uint *address, uint cmp,            \
                                 uint val) {                                    \
-    return atomic_##OP##_explicit((volatile __generic uint *)address, (__generic uint *)&cmp, val, memory_order_relaxed, memory_scope_work_group);         \
+    atomic_##OP##_explicit((volatile __generic uint *)address,                 \
+                           (__generic uint *)&cmp, val, memory_order_relaxed,  \
+                           memory_scope_work_group);                           \
+    return cmp;                                                                \
   }                                                                            \
   ulong __chip_atomic_##NAME##_l(DEFAULT_AS ulong *address, ulong cmp,         \
                                  ulong val) {                                  \
-    return atomic_##OP##_explicit((volatile __generic ulong *)address, (__generic ulong *)&cmp, val, memory_order_relaxed, memory_scope_work_group);        \
-  } \
-
-
+    atomic_##OP##_explicit((volatile __generic ulong *)address,                \
+                           (__generic ulong *)&cmp, val, memory_order_relaxed, \
+                           memory_scope_work_group);                           \
+    return cmp;                                                                \
+  }
 
 // __chip_atomic_cmpxchg_i, __chip_atomic_cmpxchg_u, __chip_atomic_cmpxchg_l
 DEF_CHIP_ATOMIC3_ORDER_SCOPE(cmpxchg, compare_exchange_strong, relaxed, device)
