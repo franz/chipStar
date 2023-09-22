@@ -576,23 +576,23 @@ DEF_CHIP_ATOMIC1_ORDER_SCOPE(dec_block, fetch_sub, relaxed, work_group)
 
 #define DEF_CHIP_ATOMIC3_ORDER_SCOPE(NAME, OP, ORDER, SCOPE)                   \
   int __chip_atomic_##NAME##_i(DEFAULT_AS int *address, int cmp, int val) {    \
-    atomic_##OP##_explicit((volatile __generic int *)address,                  \
+    atomic_##OP##_explicit((volatile __generic atomic_int *)address,           \
                            (__generic int *)&cmp, val, memory_order_##ORDER,   \
-                           memory_scope_##SCOPE);                              \
+                           memory_order_##ORDER, memory_scope_##SCOPE);        \
     return cmp;                                                                \
   }                                                                            \
   uint __chip_atomic_##NAME##_u(DEFAULT_AS uint *address, uint cmp,            \
                                 uint val) {                                    \
-    atomic_##OP##_explicit((volatile __generic uint *)address,                 \
-                           (__generic uint *)&cmp, val, memory_order_relaxed,  \
-                           memory_scope_work_group);                           \
+    atomic_##OP##_explicit((volatile __generic atomic_uint *)address,          \
+                           (__generic uint *)&cmp, val, memory_order_##ORDER,  \
+                           memory_order_##ORDER, memory_scope_##SCOPE);        \
     return cmp;                                                                \
   }                                                                            \
   ulong __chip_atomic_##NAME##_l(DEFAULT_AS ulong *address, ulong cmp,         \
                                  ulong val) {                                  \
-    atomic_##OP##_explicit((volatile __generic ulong *)address,                \
-                           (__generic ulong *)&cmp, val, memory_order_relaxed, \
-                           memory_scope_work_group);                           \
+    atomic_##OP##_explicit((volatile __generic atomic_ulong *)address,         \
+                           (__generic ulong *)&cmp, val, memory_order_##ORDER, \
+                           memory_order_##ORDER, memory_scope_##SCOPE);        \
     return cmp;                                                                \
   }
 
