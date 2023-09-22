@@ -575,15 +575,6 @@ DEF_CHIP_ATOMIC1_ORDER_SCOPE(dec_system, fetch_sub, relaxed, all_svm_devices)
 DEF_CHIP_ATOMIC1_ORDER_SCOPE(dec_block, fetch_sub, relaxed, work_group)
 
 #define DEF_CHIP_ATOMIC3_ORDER_SCOPE(NAME, OP, ORDER, SCOPE)                   \
-  int OVLD atomic_##OP##_explicit(volatile __generic int *, __generic int *,   \
-                                  int, memory_order order,                     \
-                                  memory_scope scope);                         \
-  uint OVLD atomic_##OP##_explicit(volatile __generic uint *,                  \
-                                   __generic uint *, uint, memory_order order, \
-                                   memory_scope scope);                        \
-  ulong OVLD atomic_##OP##_explicit(volatile __generic ulong *,                \
-                                    __generic ulong *, ulong,                  \
-                                    memory_order order, memory_scope scope);   \
   int __chip_atomic_##NAME##_i(DEFAULT_AS int *address, int cmp, int val) {    \
     atomic_##OP##_explicit((volatile __generic int *)address,                  \
                            (__generic int *)&cmp, val, memory_order_##ORDER,   \
