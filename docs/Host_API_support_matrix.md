@@ -17,9 +17,9 @@
 | Texture Object API            |     5     |     3     | hipGetTextureObjectResourceViewDesc, hipGetTextureObjectTextureDesc ; Texture Objects of 1D/2D type are supported; 3D, LOD, Grad, Cubemap, Gather and Mipmapped textures are not supported |
 | Surface Object API            |     2     |     0     | hipCreateSurfaceObject, hipDestroySurfaceObject |
 | Version API                   |     2     |     2     | |
-| Graph API                     |     55    |     0     | ..all missing |
+| Graph API                     |     57    |     54    | all are implemented except hipGraphRetainUserObject, hipGraphReleaseUserObject, hipGraphInstantiateWithFlags |
 | Profiler API                  |     2     |     0     | hipProfilerStart, hipProfilerStop |
 | Primary Context API           |     5     |     2     | hipDevicePrimaryCtxRelease, hipDevicePrimaryCtxRetain,  hipDevicePrimaryCtxSetFlags |
 | Module API                    |     3     |     3     | hipModuleLaunchKernel has some caveats |
 |                               |           |           | |
-| Total                         |     200   |     98    | 49% |
+| Total                         |     200   |    152    | 76% |

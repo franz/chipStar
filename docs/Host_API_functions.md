@@ -89,7 +89,7 @@
 |-----------------------------------------------------------|---------------------------------------|:----------------:|
 | `cudaFuncGetAttributes`                                   |`hipFuncGetAttributes`                 | Y*|
 | `cudaFuncSetAttribute`                                    |`hipFuncSetAttribute`                  | Y |
-| `cudaFuncSetCacheConfig`                                  |`hipFuncSetCacheConfig`                | N |
+| `cudaFuncSetCacheConfig`                                  |`hipFuncSetCacheConfig`                | Y* |
 | `cudaFuncSetSharedMemConfig`                              |`hipFuncSetSharedMemConfig`            | N |
 | `cudaLaunchKernel`                                        |`hipLaunchKernel`                      | Y |
 
@@ -230,49 +230,49 @@
 
 |   **CUDA**                                                |   **HIP**                     |  **chipStar**|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
-| `cudaGraphAddChildGraphNode`                              |                               | N                |
-| `cudaGraphAddDependencies`                                |                               | N                |
-| `cudaGraphAddEmptyNode`                                   |                               | N                |
-| `cudaGraphAddHostNode`                                    |                               | N                |
-| `cudaGraphAddKernelNode`                                  |                               | N                |
+| `cudaGraphAddChildGraphNode`                              |  hipGraphAddChildGraphNode    | Y                |
+| `cudaGraphAddDependencies`                                |  hipGraphAddDependencies      | Y                |
+| `cudaGraphAddEmptyNode`                                   |  hipGraphAddEmptyNode         | Y                |
+| `cudaGraphAddHostNode`                                    |  hipGraphAddHostNode          | Y                |
+| `cudaGraphAddKernelNode`                                  |  hipGraphAddKernelNode        | Y                |
 
-| `cudaGraphAddMemcpyNode`                                  |                               | N                |
-| `cudaGraphAddMemsetNode`                                  |                               | N                |
-| `cudaGraphChildGraphNodeGetGraph`                         |                               | N                |
-| `cudaGraphClone`                                          |                               | N                |
-| `cudaGraphCreate`                                         |                               | N                |
+| `cudaGraphAddMemcpyNode`                                  |  hipGraphAddMemcpyNode        | Y                |
+| `cudaGraphAddMemsetNode`                                  |  hipGraphAddMemsetNode        | Y                |
+| `cudaGraphChildGraphNodeGetGraph`                         |  hipGraphChildGraphNodeGetGraph | Y              |
+| `cudaGraphClone`                                          |  hipGraphClone                | Y                |
+| `cudaGraphCreate`                                         |  hipGraphCreate               | Y                |
 
-| `cudaGraphDestroy`                                        |                               | N                |
-| `cudaGraphDestroyNode`                                    |                               | N                |
-| `cudaGraphExecDestroy`                                    |                               | N                |
-| `cudaGraphGetEdges`                                       |                               | N                |
-| `cudaGraphGetNodes`                                       |                               | N                |
+| `cudaGraphDestroy`                                        |  hipGraphDestroy              | Y                |
+| `cudaGraphDestroyNode`                                    |  hipGraphCreate               | Y                |
+| `cudaGraphExecDestroy`                                    |  hipGraphExecDestroy          | Y                |
+| `cudaGraphGetEdges`                                       |  hipGraphGetEdges             | Y                |
+| `cudaGraphGetNodes`                                       |  hipGraphGetNodes             | Y                |
 
-| `cudaGraphGetRootNodes`                                   |                               | N                |
-| `cudaGraphHostNodeGetParams`                              |                               | N                |
-| `cudaGraphHostNodeSetParams`                              |                               | N                |
-| `cudaGraphInstantiate`                                    |                               | N                |
-| `cudaGraphExecKernelNodeSetParams`                        |                               | N                |
+| `cudaGraphGetRootNodes`                                   |  hipGraphGetRootNodes         | Y                |
+| `cudaGraphHostNodeGetParams`                              |  hipGraphHostNodeGetParams    | Y                |
+| `cudaGraphHostNodeSetParams`                              |  hipGraphHostNodeSetParams    | Y                |
+| `cudaGraphInstantiate`                                    |  hipGraphInstantiate          | Y                |
+| `cudaGraphExecKernelNodeSetParams`                        |  hipGraphExecKernelNodeSetParams  | Y            |
 
-| `cudaGraphExecMemcpyNodeSetParams`                        |                               | N                |
-| `cudaGraphExecMemsetNodeSetParams`                        |                               | N                |
-| `cudaGraphExecHostNodeSetParams`                          |                               | N                |
-| `cudaGraphExecUpdate`                                     |                               | N                |
-| `cudaGraphKernelNodeGetParams`                            |                               | N                |
+| `cudaGraphExecMemcpyNodeSetParams`                        |  hipGraphExecMemcpyNodeSetParams  | Y            |
+| `cudaGraphExecMemsetNodeSetParams`                        |  hipGraphExecMemsetNodeSetParams  | Y            |
+| `cudaGraphExecHostNodeSetParams`                          |  hipGraphExecHostNodeSetParams  | Y              |
+| `cudaGraphExecUpdate`                                     |  hipGraphExecUpdate           | Y                |
+| `cudaGraphKernelNodeGetParams`                            |  hipGraphKernelNodeGetParams  | Y                |
 
-| `cudaGraphKernelNodeSetParams`                            |                               | N                |
-| `cudaGraphLaunch`                                         |                               | N                |
-| `cudaGraphMemcpyNodeGetParams`                            |                               | N                |
-| `cudaGraphMemcpyNodeSetParams`                            |                               | N                |
-| `cudaGraphMemsetNodeGetParams`                            |                               | N                |
+| `cudaGraphKernelNodeSetParams`                            |  hipGraphKernelNodeSetParams  | Y                |
+| `cudaGraphLaunch`                                         |  hipGraphLaunch               | Y                |
+| `cudaGraphMemcpyNodeGetParams`                            |  hipGraphMemcpyNodeGetParams  | Y                |
+| `cudaGraphMemcpyNodeSetParams`                            |  hipGraphMemcpyNodeSetParams  | Y                |
+| `cudaGraphMemsetNodeGetParams`                            |  hipGraphMemsetNodeGetParams  | Y                |
 
-| `cudaGraphMemsetNodeSetParams`                            |                               | N                |
-| `cudaGraphNodeFindInClone`                                |                               | N                |
-| `cudaGraphNodeGetDependencies`                            |                               | N                |
-| `cudaGraphNodeGetDependentNodes`                          |                               | N                |
-| `cudaGraphNodeGetType`                                    |                               | N                |
+| `cudaGraphMemsetNodeSetParams`                            |  hipGraphMemsetNodeSetParams  | Y                |
+| `cudaGraphNodeFindInClone`                                |  hipGraphNodeFindInClone      | Y                |
+| `cudaGraphNodeGetDependencies`                            |  hipGraphNodeGetDependencies  | Y                |
+| `cudaGraphNodeGetDependentNodes`                          |  hipGraphNodeGetDependentNodes  | Y              |
+| `cudaGraphNodeGetType`                                    |  hipGraphNodeGetType          | Y                |
 
-| `cudaGraphRemoveDependencies`                             |                               | N                |
+| `cudaGraphRemoveDependencies`                             |  hipGraphRemoveDependencies   | Y                |
 
 ... INCOMPLETE, there are 55 Graph API functions in CHIPBindings.cc
 
