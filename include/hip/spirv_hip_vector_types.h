@@ -37,11 +37,13 @@ THE SOFTWARE.
 #endif
 
 #if defined(__has_attribute)
-#if __has_attribute(ext_vector_type)
-#define __NATIVE_VECTOR__(n, T) T __attribute__((ext_vector_type(n)))
-#else
+//#if __has_attribute(ext_vector_type)
+//#define __NATIVE_VECTOR__(n, T) T __attribute__((ext_vector_type(n)))
+//#define USING_EXT_VECT_TYPE
+//#else
+#undef USING_EXT_VECT_TYPE
 #define __NATIVE_VECTOR__(n, T) T[n]
-#endif
+//#endif
 
 #if defined(__cplusplus)
 #if !defined(__HIPCC_RTC__)
@@ -455,7 +457,12 @@ struct HIP_vector_type : public HIP_vector_base<T, rank> {
 
   __HOST_DEVICE__
   HIP_vector_type &operator+=(const HIP_vector_type &x) noexcept {
+#ifdef USING_EXT_VECT_TYPE
     data += x.data;
+#else
+    for (auto i = 0; i < rank; ++i)
+      data[i] += x.data[i];
+#endif
     return *this;
   }
   template <typename U, typename std::enable_if<
@@ -466,7 +473,13 @@ struct HIP_vector_type : public HIP_vector_base<T, rank> {
 
   __HOST_DEVICE__
   HIP_vector_type &operator-=(const HIP_vector_type &x) noexcept {
+#ifdef USING_EXT_VECT_TYPE
     data -= x.data;
+#else
+    for (auto i = 0; i < rank; ++i)
+      data[i] -= x.data[i];
+#endif
+
     return *this;
   }
   template <typename U, typename std::enable_if<
@@ -478,7 +491,12 @@ struct HIP_vector_type : public HIP_vector_base<T, rank> {
   __HOST_DEVICE__
   HIP_vector_type& operator*=(const HIP_vector_type& x) noexcept
   {
+#ifdef USING_EXT_VECT_TYPE
       data *= x.data;
+#else
+      for (auto i = 0; i < rank; ++i)
+        data[i] *= x.data[i];
+#endif
       return *this;
   }
 
@@ -501,7 +519,12 @@ struct HIP_vector_type : public HIP_vector_base<T, rank> {
 
   __HOST_DEVICE__
   HIP_vector_type &operator/=(const HIP_vector_type &x) noexcept {
-    data /= x.data;
+#ifdef USING_EXT_VECT_TYPE
+      data /= x.data;
+#else
+      for (auto i = 0; i < rank; ++i)
+        data[i] /= x.data[i];
+#endif
     return *this;
   }
   template <typename U, typename std::enable_if<
@@ -514,7 +537,12 @@ struct HIP_vector_type : public HIP_vector_base<T, rank> {
             typename std::enable_if<std::is_signed<U>{}>::type * = nullptr>
   __HOST_DEVICE__ HIP_vector_type operator-() const noexcept {
     auto tmp(*this);
+#ifdef USING_EXT_VECT_TYPE
     tmp.data = -tmp.data;
+#else
+    for (auto i = 0; i < rank; ++i)
+      tmp.data[i] = -tmp.data[i];
+#endif
     return tmp;
   }
 
@@ -523,6 +551,13 @@ struct HIP_vector_type : public HIP_vector_base<T, rank> {
   __HOST_DEVICE__ HIP_vector_type operator~() const noexcept {
     HIP_vector_type r{*this};
     r.data = ~r.data;
+#ifdef USING_EXT_VECT_TYPE
+    r.data = ~r.data;
+#else
+    for (auto i = 0; i < rank; ++i)
+      r.data[i] = ~r.data[i];
+#endif
+
     return r;
   }
 
@@ -530,7 +565,12 @@ struct HIP_vector_type : public HIP_vector_base<T, rank> {
             typename std::enable_if<std::is_integral<U>{}>::type * = nullptr>
   __HOST_DEVICE__ HIP_vector_type &
   operator%=(const HIP_vector_type &x) noexcept {
+#ifdef USING_EXT_VECT_TYPE
     data %= x.data;
+#else
+    for (auto i = 0; i < rank; ++i)
+      data[i] %= x.data[i];
+#endif
     return *this;
   }
 
@@ -538,7 +578,12 @@ struct HIP_vector_type : public HIP_vector_base<T, rank> {
             typename std::enable_if<std::is_integral<U>{}>::type * = nullptr>
   __HOST_DEVICE__ HIP_vector_type &
   operator^=(const HIP_vector_type &x) noexcept {
+#ifdef USING_EXT_VECT_TYPE
     data ^= x.data;
+#else
+    for (auto i = 0; i < rank; ++i)
+      data[i] ^= x.data[i];
+#endif
     return *this;
   }
 
@@ -546,7 +591,12 @@ struct HIP_vector_type : public HIP_vector_base<T, rank> {
             typename std::enable_if<std::is_integral<U>{}>::type * = nullptr>
   __HOST_DEVICE__ HIP_vector_type &
   operator|=(const HIP_vector_type &x) noexcept {
+#ifdef USING_EXT_VECT_TYPE
     data |= x.data;
+#else
+    for (auto i = 0; i < rank; ++i)
+      data[i] |= x.data[i];
+#endif
     return *this;
   }
 
@@ -554,7 +604,12 @@ struct HIP_vector_type : public HIP_vector_base<T, rank> {
             typename std::enable_if<std::is_integral<U>{}>::type * = nullptr>
   __HOST_DEVICE__ HIP_vector_type &
   operator&=(const HIP_vector_type &x) noexcept {
+#ifdef USING_EXT_VECT_TYPE
     data &= x.data;
+#else
+    for (auto i = 0; i < rank; ++i)
+      data[i] &= x.data[i];
+#endif
     return *this;
   }
 
@@ -562,7 +617,12 @@ struct HIP_vector_type : public HIP_vector_base<T, rank> {
             typename std::enable_if<std::is_integral<U>{}>::type * = nullptr>
   __HOST_DEVICE__ HIP_vector_type &
   operator>>=(const HIP_vector_type &x) noexcept {
+#ifdef USING_EXT_VECT_TYPE
     data >>= x.data;
+#else
+    for (auto i = 0; i < rank; ++i)
+      data[i] >>= x.data[i];
+#endif
     return *this;
   }
 
@@ -570,7 +630,12 @@ struct HIP_vector_type : public HIP_vector_base<T, rank> {
             typename std::enable_if<std::is_integral<U>{}>::type * = nullptr>
   __HOST_DEVICE__ HIP_vector_type &
   operator<<=(const HIP_vector_type &x) noexcept {
+#ifdef USING_EXT_VECT_TYPE
     data <<= x.data;
+#else
+    for (auto i = 0; i < rank; ++i)
+      data[i] <<= x.data[i];
+#endif
     return *this;
   }
 };
