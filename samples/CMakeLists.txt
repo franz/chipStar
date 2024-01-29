@@ -132,7 +132,7 @@ set(SAMPLES
     hipDeviceLink
 )
 
-include(mkl_and_icpx)
+#include(mkl_and_icpx)
 # Add samples that depend on Intel's oneAPI compiler - if available.
 if (SYCL_AVAILABLE)
   list(APPEND SAMPLES sycl_hip_interop)
